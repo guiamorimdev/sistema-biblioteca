@@ -2,13 +2,13 @@ package dados;
 public class Revista extends ItemAcervo implements Emprestavel{
     private int edicao;
     private String mes;
-    private boolean disponivel;
+    private int quantidade;
 
-    public Revista(String titulo, String autor, int ano, int edicao, String mes) {
+    public Revista(String titulo, String autor, int ano, int edicao, String mes, int quantidade) {
         super(titulo, autor, ano);
         this.edicao = edicao;
         this.mes = mes;
-        this.disponivel = true;
+        this.quantidade = quantidade;
     }
     
     @Override
@@ -18,17 +18,17 @@ public class Revista extends ItemAcervo implements Emprestavel{
     
     @Override
     public void emprestar(){
-        this.disponivel = false;
+        this.quantidade--;
     }
     
     @Override
     public void devolver(){
-        this.disponivel = true;
+        this.quantidade++;
     }
     
     @Override
     public boolean isDisponivel(){
-        return disponivel;
+        return quantidade > 0;
     }
 
     public int getEdicao() {
@@ -39,12 +39,16 @@ public class Revista extends ItemAcervo implements Emprestavel{
         return mes;
     }
     
+    public int getQuantidade() { 
+        return quantidade; 
+    }
+    
     public String toString(){
         String status;
-        if (disponivel == true){
-            status = "Disponivel";
+        if (quantidade > 0){
+            status = "Disponivel (" + quantidade + ")";
         } else {
-            status = "Emprestado";
+            status = "Indisponivel";
         }
         return super.toString() + edicao + " | " + mes + " | " + status;
     }

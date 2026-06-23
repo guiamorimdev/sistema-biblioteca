@@ -31,10 +31,19 @@ public class TelaPrincipal extends javax.swing.JFrame {
     
     public TelaPrincipal(GerenciadorBiblioteca gerenciador) {
         this.gerenciador = gerenciador;
+        gerenciador.carregarAcervo();
         initComponents();
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
+
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                gerenciador.salvarAcervo();
+                System.exit(0);
+            }
+        });
         setLocationRelativeTo(null);
         atualizarTabela();
-        
         if (!gerenciador.isAdministrador()) {
             btnCadastrarLivro.setEnabled(false);
             btnCadastrarRevista.setEnabled(false);
@@ -47,17 +56,24 @@ public class TelaPrincipal extends javax.swing.JFrame {
 
         for (ItemAcervo item : gerenciador.getAcervo()) {
             String status;
-            if (item instanceof dados.Emprestavel) {
-                dados.Emprestavel emp = (dados.Emprestavel) item;
-                if (emp.isDisponivel()) {
-                    status = "Disponível";
+            if (item instanceof Livro){
+                Livro livro = (Livro) item;
+                if (livro.isDisponivel()){
+                    status = "Disponivel (" + livro.getQuantidade() + ")";
                 } else {
-                    status = "Emprestado";
+                    status = "Indisponivel";
+                }
+            } else if (item instanceof Revista){
+                Revista revista = (Revista) item;
+                if (revista.isDisponivel()){
+                    status = "Disponivel (" + revista.getQuantidade() + ")";
+                } else {
+                    status = "Indisponivel";
                 }
             } else {
                 status = "-";
             }
-
+            
             model.addRow(new Object[]{
                 item.getTipo(),
                 item.getTitulo(),
@@ -65,8 +81,8 @@ public class TelaPrincipal extends javax.swing.JFrame {
                 item.getAno(),
                 status
             });
-        }   
-}
+        }
+    }
     
     
 
@@ -192,7 +208,7 @@ public class TelaPrincipal extends javax.swing.JFrame {
                     .addComponent(btnDevolver)
                     .addComponent(btnVerEmprestimos))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tabelaAcervo, javax.swing.GroupLayout.DEFAULT_SIZE, 384, Short.MAX_VALUE)
+                .addComponent(tabelaAcervo, javax.swing.GroupLayout.DEFAULT_SIZE, 391, Short.MAX_VALUE)
                 .addGap(22, 22, 22))
         );
 
@@ -214,105 +230,27 @@ public class TelaPrincipal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnEmprestarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEmprestarActionPerformed
-        String titulo = JOptionPane.showInputDialog(this, "Título do item para emprestar:");
-        
-        if (titulo == null || titulo.isEmpty()) return;
-
-        String nomeUsuario = JOptionPane.showInputDialog(this, "Nome do usuário:");
-        
-        if (nomeUsuario == null || nomeUsuario.isEmpty()) return;
-
-        String diasStr = JOptionPane.showInputDialog(this, "Quantos dias para devolução?");
-        
-        if (diasStr == null || diasStr.isEmpty()) return;
-
-        try {
-            int dias = Integer.parseInt(diasStr);
-            LocalDate dataDevolucao = LocalDate.now().plusDays(dias);
-            gerenciador.realizarEmprestimo(titulo, nomeUsuario, dataDevolucao);
-            atualizarTabela();
-            JOptionPane.showMessageDialog(this, "Empréstimo realizado com sucesso!");
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Dias deve ser um número!", "Erro", JOptionPane.ERROR_MESSAGE);
-        } catch (ItemNaoEncontradoException | ItemIndisponivelException e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-        }
+        DialogEmprestar dialog = new DialogEmprestar(this, gerenciador);
+        dialog.setVisible(true);
+        atualizarTabela();
     }//GEN-LAST:event_btnEmprestarActionPerformed
 
     private void btnCadastrarLivroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCadastrarLivroActionPerformed
-        String titulo = JOptionPane.showInputDialog(this, "Título do Livro:");
-        
-        if (titulo == null || titulo.isEmpty()) return;
-        
-        String autor = JOptionPane.showInputDialog(this, "Autor:");
-            
-        if (autor == null || autor.isEmpty()) return;
-        
-        String anoStr = JOptionPane.showInputDialog(this, "Ano:");
-            
-        if (anoStr == null || anoStr.isEmpty()) return;
-        
-        String paginasStr = JOptionPane.showInputDialog(this, "Número de Páginas:");
-        
-        if (paginasStr == null || paginasStr.isEmpty()) return;
-        
-        String isbn = JOptionPane.showInputDialog(this, "ISBN:");
-
-        if (isbn == null || isbn.isEmpty()) return;
-            try {
-                int ano = Integer.parseInt(anoStr);
-                int paginas = Integer.parseInt(paginasStr);
-                gerenciador.adicionarItem(new Livro(titulo, autor, ano, paginas, isbn));
-                atualizarTabela();
-                JOptionPane.showMessageDialog(this, "Livro cadastrado com sucesso!");
-            } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Ano e páginas devem ser números!", "Erro", JOptionPane.ERROR_MESSAGE);
-            }
+        DialogCadastrarLivro dialog = new DialogCadastrarLivro(this, gerenciador);
+        dialog.setVisible(true);
+        atualizarTabela();
     }//GEN-LAST:event_btnCadastrarLivroActionPerformed
 
     private void btnCadastrarRevistaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCadastrarRevistaActionPerformed
-        String titulo = JOptionPane.showInputDialog(this, "Título da Revista:");
-        
-        if (titulo == null || titulo.isEmpty()) return;
-        
-        String autor = JOptionPane.showInputDialog(this, "Autor:");
-        
-        if (autor == null || autor.isEmpty()) return;
-        
-        String anoStr = JOptionPane.showInputDialog(this, "Ano:");
-        
-        if (anoStr == null || anoStr.isEmpty()) return;
-        
-        String edicaoStr = JOptionPane.showInputDialog(this, "Edição:");
-        
-        if (edicaoStr == null || edicaoStr.isEmpty()) return;
-
-        String mes = JOptionPane.showInputDialog(this, "Mês:");
-        
-        if (mes == null || mes.isEmpty()) return;
-
-        try {
-            int ano = Integer.parseInt(anoStr);
-            int edicao = Integer.parseInt(edicaoStr);
-            gerenciador.adicionarItem(new Revista(titulo, autor, ano, edicao, mes));
-            atualizarTabela();
-            JOptionPane.showMessageDialog(this, "Revista cadastrada com sucesso!");
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Ano e edição devem ser números!", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
+        DialogCadastrarRevista dialog = new DialogCadastrarRevista(this, gerenciador);
+        dialog.setVisible(true);
+        atualizarTabela();
     }//GEN-LAST:event_btnCadastrarRevistaActionPerformed
 
     private void btnDevolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDevolverActionPerformed
-        String titulo = JOptionPane.showInputDialog(this, "Título do item para devolver:");
-        if (titulo == null || titulo.isEmpty()) return;
-
-        try {
-            gerenciador.realizarDevolucao(titulo);
-            atualizarTabela();
-            JOptionPane.showMessageDialog(this, "Devolução realizada com sucesso!");
-        } catch (ItemNaoEncontradoException | ItemIndisponivelException e) {
-            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-        }
+        DialogDevolver dialog = new DialogDevolver(this, gerenciador);
+        dialog.setVisible(true);
+        atualizarTabela();
     }//GEN-LAST:event_btnDevolverActionPerformed
 
     private void btnVerEmprestimosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVerEmprestimosActionPerformed

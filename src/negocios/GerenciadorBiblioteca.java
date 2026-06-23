@@ -8,6 +8,13 @@ import dados.Pessoa;
 import java.time.LocalDate;
 import dados.UsuarioComum;
 import java.util.ArrayList;
+import dados.Livro;
+import dados.Revista;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class GerenciadorBiblioteca {
 
@@ -119,7 +126,40 @@ public class GerenciadorBiblioteca {
             System.out.println(emp);
         }
     }
+    
+    public void salvarAcervo() {
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter("acervo.txt"))) {
+        for (ItemAcervo item : acervo) {
+            if (item instanceof Livro) {
+                Livro l = (Livro) item;
+                bw.write("LIVRO;" + l.getTitulo() + ";" + l.getAutor() + ";" + l.getAno() + ";" + l.getNumeroPaginas() + ";" + l.getIsbn() + ";" + l.getQuantidade());
+            } else if (item instanceof Revista) {
+                Revista r = (Revista) item;
+                bw.write("REVISTA;" + r.getTitulo() + ";" + r.getAutor() + ";" + r.getAno() + ";" + r.getEdicao() + ";" + r.getMes() + ";" + r.getQuantidade());
+            }
+            bw.newLine();
+        }
+    } catch (IOException e) {
+        System.out.println("Erro ao salvar: " + e.getMessage());
+    }
+    }
 
+    public void carregarAcervo() {
+        try (BufferedReader br = new BufferedReader(new FileReader("acervo.txt"))) {
+            String linha;
+            while ((linha = br.readLine()) != null) {
+                String[] partes = linha.split(";");
+                if (partes[0].equals("LIVRO")) {
+                    acervo.add(new Livro(partes[1], partes[2], Integer.parseInt(partes[3]), Integer.parseInt(partes[4]), partes[5], Integer.parseInt(partes[6])));
+                } else if (partes[0].equals("REVISTA")) {
+                    acervo.add(new Revista(partes[1], partes[2], Integer.parseInt(partes[3]), Integer.parseInt(partes[4]), partes[5], Integer.parseInt(partes[6])));
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Arquivo não encontrado, iniciando com acervo vazio.");
+        }
+    }
+    
     public ArrayList<ItemAcervo> getAcervo()         { return acervo; }
     public ArrayList<Emprestimo> getEmprestimos()     { return emprestimos; }
 }

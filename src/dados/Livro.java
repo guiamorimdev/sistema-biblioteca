@@ -2,13 +2,13 @@ package dados;
 public class Livro extends ItemAcervo implements Emprestavel {
     private int numeroPaginas;
     private String isbn;
-    private boolean disponivel;
+    private int quantidade;
 
-    public Livro(String titulo, String autor, int ano, int numeroPaginas, String isbn) {
+    public Livro(String titulo, String autor, int ano, int numeroPaginas, String isbn, int quantidade) {
         super(titulo, autor, ano);
         this.numeroPaginas = numeroPaginas;
         this.isbn = isbn;
-        this.disponivel = true;
+        this.quantidade = quantidade;
     }
     
     // registro de emprestimo, multas, histórico. Classe de emprestimo,...
@@ -20,17 +20,17 @@ public class Livro extends ItemAcervo implements Emprestavel {
     
     @Override
     public void emprestar(){
-        this.disponivel = false;
+        this.quantidade--;
     }
     
     @Override
     public void devolver(){
-        this.disponivel = true;
+        this.quantidade++;
     }
     
     @Override
     public boolean isDisponivel(){
-        return disponivel;
+        return quantidade > 0;
     }
 
     public int getNumeroPaginas() {
@@ -40,14 +40,18 @@ public class Livro extends ItemAcervo implements Emprestavel {
     public String getIsbn() {
         return isbn;
     }
+    
+    public int getQuantidade(){
+        return quantidade;
+    }
 
     @Override
     public String toString() {
         String status;
-        if (disponivel == true){
-            status = "Disponivel";
+        if (quantidade > 0){
+            status = "Disponivel (" + quantidade + ")";
         } else {
-            status = "Emprestado";
+            status = "Indisponivel";
         }
         return super.toString() + numeroPaginas + " pgs | " + isbn + " | " + status;
     }
